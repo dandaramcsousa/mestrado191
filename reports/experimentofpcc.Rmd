@@ -45,22 +45,38 @@ theta2 <- function(df, i){
     df <- df[i, ]
     return(mean(df$probabilidadedoar_escola))
   }
-  booted2 <- boot(data = experimento,
+booted2 <- boot(data = experimento,
                   statistic = theta2,
                   R = 4000)
-  ci2 = tidy(booted2,
+ci2 = tidy(booted2,
             conf.level = .95,
             conf.method = "bca",
             conf.int = TRUE)
 ```
 
 ```{r}
-estatisticas <- data.frame(narrativa = c('Extrema Pobreza', 'Escola'),
-                           statistic = c(ci$statistic, ci2$statistic),
-                           bias = c(ci$bias, ci2$bias),
-                           std.error = c(ci$std.error, ci2$std.error),
-                           conf.low = c(ci$conf.low, ci2$conf.low),
-                           conf.high = c(ci$conf.high, ci2$conf.high))
+theta3 <- function(df, i){
+  df <- df[i, ]
+  ep <- df %>% slice(i) %>% summarise(media = mean(probabilidadedoar_extremapobreza)) %>% pull(media)
+  es <- df %>% slice(i) %>% summarise(media = mean(probabilidadedoar_escola)) %>% pull(media)
+  return(ep - es)
+}
+booted3 <- boot(data = experimento,
+                  statistic = theta3,
+                  R = 4000)
+ci3 = tidy(booted3,
+            conf.level = .95,
+            conf.method = "bca",
+            conf.int = TRUE)
+```
+
+```{r}
+estatisticas <- data.frame(narrativa = c('Extrema Pobreza', 'Escola', 'Diferenca'),
+                           statistic = c(ci$statistic, ci2$statistic, ci3$statistic),
+                           bias = c(ci$bias, ci2$bias, ci3$bias),
+                           std.error = c(ci$std.error, ci2$std.error, ci3$std.error),
+                           conf.low = c(ci$conf.low, ci2$conf.low, ci3$conf.low),
+                           conf.high = c(ci$conf.high, ci2$conf.high, ci3$conf.high))
   
 write_csv(estatisticas, here::here("data/estatisticas.csv"))
 estatisticas = read_csv(here::here("data/estatisticas.csv"))
@@ -69,11 +85,25 @@ estatisticas = read_csv(here::here("data/estatisticas.csv"))
 
 ```{r}
 estatisticas %>%
+  filter(narrativa != "Diferenca") %>%
   ggplot(aes(statistic +1, narrativa)) +
   geom_point(size = 2) +
   geom_errorbarh(aes(xmin = conf.low +1 , xmax = conf.high + 1), height = 0) +
   scale_x_continuous(breaks=seq(1, 7, 1), limits=c(1, 7)) + 
   theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(),
         panel.grid.major.x = element_blank())
-ggsave("../data/probabilidadedoar2.png",width=8, height=4)
-  ```
+ggsave("../data/tendenciaadoar.png",width=8, height=4)
+```
+
+```{r}
+estatisticas %>%
+  filter(narrativa == "Diferenca") %>%
+  ggplot(aes(statistic +1, narrativa)) +
+  geom_point(size = 2) +
+  geom_errorbarh(aes(xmin = conf.low +1 , xmax = conf.high + 1), height = 0) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), panel.grid.major.x = element_blank())
+ggsave("../data/icdadiferenca.png",width=8, height=4)
+```
+
+
+
