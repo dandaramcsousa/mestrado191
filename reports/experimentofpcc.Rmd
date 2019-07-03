@@ -14,12 +14,7 @@ library(grid)
 
 knitr::opts_chunk$set(fig.width=25, fig.height=8) 
 
-theme_set(theme_bw())
-paleta = c("#404E4D",
-           "#92DCE5",
-           "#938BA1",
-           "#2D3142",
-           "#F4743B")
+theme_set(theme_linedraw())
 ```
 
 ```{r warning=FALSE}
@@ -78,6 +73,7 @@ estatisticas %>%
   geom_point(size = 2) +
   geom_errorbarh(aes(xmin = conf.low +1 , xmax = conf.high + 1), height = 0) +
   scale_x_continuous(breaks=seq(1, 7, 1), limits=c(1, 7)) + 
-  labs(x = "Tendência a doação", y = "Narrativa")
-ggsave("../data/probabilidadedoar.png",width=8, height=4)
-```
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(),
+        panel.grid.major.x = element_blank())
+ggsave("../data/probabilidadedoar2.png",width=8, height=4)
+  ```
