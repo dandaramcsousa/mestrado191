@@ -9,6 +9,9 @@ output: html_notebook
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(magick)
+library(grid)
+
 theme_set(theme_bw())
 paleta = c("#404E4D",
            "#92DCE5",
@@ -24,12 +27,21 @@ statistic = read_statistic()
 ```
 
 ```{r}
+antropomorfico <- image_read(here::here("data/antropomorfico.png"))
+image_scale(antropomorfico, "100")
+antropomorfico <- image_fill(antropomorfico,'none')
+g <- rasterGrob(antropomorfico, interpolate=TRUE)
+
+```
+
+```{r}
 statistic %>%
   ggplot(aes(mean_justodoar, narrative)) +
   geom_point(size = 2) +
   geom_errorbarh(aes(xmin=mean_justodoar-sd_justodoar, xmax=mean_justodoar+sd_justodoar)) +
   expand_limits(x=0) +
-  labs(x = "Quão justo é doar?", y = "Narrativa")
+  labs(x = "Quão justo é doar?", y = "Narrativa") +
+  as.numeric(as.factor("Extrema Pobreza") 
 ```
 
 ```{r}
@@ -38,5 +50,6 @@ statistic %>%
   geom_errorbarh(aes(xmin=mean_probdoar-sd_probdoar, xmax=mean_probdoar+sd_probdoar)) +
   geom_point(size = 2) +
   expand_limits(x=0) +
-  labs(x = "Probabilidade de doar", y = "Narrativa")
+  labs(x = "Probabilidade de doar", y = "Narrativa") +
+  as.numeric(as.factor("Extrema Pobreza")
 ```
