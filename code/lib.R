@@ -1,7 +1,8 @@
 read_projectdata <- function(){
   library(dplyr)
   library(readr)
-  experimento = read_csv(here::here("data/experimento6.csv"))
+  experimento = read_csv(here::here("data/experimento6.csv")) %>%
+    mutate_all(funs(replace(., is.na(.), 0)))
   names(experimento)[2] <- "data"
   names(experimento)[3] <- "pensamento_extremapobreza"
   names(experimento)[4] <- "justodoar_extremapobreza"
@@ -17,20 +18,43 @@ read_projectdata <- function(){
   
 }
 
-read_statistic <- function(){
+
+calculate_statistic <- function(){
+  library(broom)
+  library(boot)
   read_projectdata()
   
-  statistic <- data.frame(narrative = c('Extrema Pobreza', 'Escola'),
-                          mean_justodoar = c(mean(experimento$justodoar_extremapobreza), mean(experimento$justodoar_escola)),
-                          sd_justodoar = c(sd(experimento$justodoar_extremapobreza), sd(experimento$justodoar_escola)),
-                          min_justodoar = c(min(experimento$justodoar_extremapobreza), min(experimento$justodoar_escola)),
-                          max_justodoar = c(max(experimento$justodoar_extremapobreza), max(experimento$justodoar_escola)),
-                          mean_probdoar = c(mean(experimento$probabilidadedoar_extremapobreza), mean(experimento$probabilidadedoar_escola)),
-                          sd_probdoar = c(sd(experimento$probabilidadedoar_extremapobreza), sd(experimento$probabilidadedoar_escola)),
-                          min_probdoar = c(min(experimento$probabilidadedoar_extremapobreza, min(experimento$probabilidadedoar_escola))),
-                          max_probdoar = c(max(experimento$probabilidadedoar_extremapobreza, max(experimento$probabilidadedoar_escola))),
-                          n = c(NROW(experimento$justodoar_extremapobreza), NROW(experimento$justodoar_escola))
-  )
-  write_csv(statistic, here::here("data/statistic.csv"))
-  statistic = read_csv(here::here("data/statistic.csv"))
+  theta <- function(df, i){
+    df <- df[i, ]
+    return(mean(df$probabilidadedoar_extremapobreza))
+  }
+  
+  booted <- boot(data = experimento, 
+                statistic = theta, 
+                R = 4000)
+  ci = tidy(booted, 
+            conf.level = .95,
+            conf.method = "bca",
+            conf.int = TRUE)
+  
+  theta2 <- function(df, i){
+    df <- df[i, ]
+    return(mean(df$probabilidadedoar_escola))
+  }
+  booted2 <- boot(data = experimento,
+                  statistic = theta2,
+                  R = 4000)
+  ci2 = tidy(booted2,
+            conf.level = .95,
+            conf.method = "bca",
+            conf.int = TRUE)
+  estatisticas <- data.frame(narrativa = c('Extrema Pobreza', 'Escola'),
+                          statistic = c(ci$statistic, ci2$statistic),
+                          bias = c(ci$bias, ci2$bias),
+                          std.error = c(ci$std.error, ci2$std.error),
+                          conf.low = c(ci$conf.low, ci2$conf.low),
+                          conf.high = c(ci$conf.high, ci2$conf.high))
+  
+  write_csv(estatisticas, here::here("data/estatisticas.csv"))
+  estatisticas = read_csv(here::here("data/estatisticas.csv"))
 }

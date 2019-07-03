@@ -25,40 +25,59 @@ paleta = c("#404E4D",
 ```{r warning=FALSE}
 source(here::here("code/lib.R"))
 experimento = read_projectdata()
-statistic = read_statistic()
 ```
 
 ```{r}
-antropomorfico <- image_read(here::here("data/antropomorfico.png"))
-image_scale(antropomorfico, "100")
-antropomorfico <- image_fill(antropomorfico,'none')
-antropomorfico <- rasterGrob(antropomorfico, interpolate=TRUE)
+  library(broom)
+  library(boot)
 
-pie <- image_read(here::here("data/pizza.png"))
-image_scale(pie, "100")
-pie <- image_fill(pie,'none')
-pie <- rasterGrob(pie, interpolate=TRUE)
+  theta <- function(df, i){
+    df <- df[i, ]
+    return(mean(df$probabilidadedoar_extremapobreza))
+  }
+  
+  booted <- boot(data = experimento, 
+                statistic = theta, 
+                R = 4000)
+  ci = tidy(booted, 
+            conf.level = .95,
+            conf.method = "bca",
+            conf.int = TRUE)
 ```
 
 ```{r}
-statistic %>%
-  ggplot(aes(mean_justodoar, narrative)) +
+theta2 <- function(df, i){
+    df <- df[i, ]
+    return(mean(df$probabilidadedoar_escola))
+  }
+  booted2 <- boot(data = experimento,
+                  statistic = theta2,
+                  R = 4000)
+  ci2 = tidy(booted2,
+            conf.level = .95,
+            conf.method = "bca",
+            conf.int = TRUE)
+```
+
+```{r}
+estatisticas <- data.frame(narrativa = c('Extrema Pobreza', 'Escola'),
+                           statistic = c(ci$statistic, ci2$statistic),
+                           bias = c(ci$bias, ci2$bias),
+                           std.error = c(ci$std.error, ci2$std.error),
+                           conf.low = c(ci$conf.low, ci2$conf.low),
+                           conf.high = c(ci$conf.high, ci2$conf.high))
+  
+write_csv(estatisticas, here::here("data/estatisticas.csv"))
+estatisticas = read_csv(here::here("data/estatisticas.csv"))
+
+```
+
+```{r}
+estatisticas %>%
+  ggplot(aes(statistic +1, narrativa)) +
   geom_point(size = 2) +
-  geom_errorbarh(aes(xmin=mean_justodoar-sd_justodoar, xmax=mean_justodoar+sd_justodoar), height = 0) +
-  scale_x_continuous(breaks=seq(0, 7, 1), limits=c(0, 7)) +
-  labs(x = "Quão justo é doar?", y = "Narrativa")
-#+ annotation_custom(antropomorfico, xmin=2, xmax=4, ymin=(as.numeric(as.factor("Extrema Pobreza")) + 0.5), ymax=Inf) +
-#  annotation_custom(pie, xmin=2, xmax = 4, ymin = -Inf, ymax=(as.numeric(as.factor("Escola"))) + 0.5)
-   
-ggsave("../data/justodoar.png",width=8, height=4)
-```
-
-```{r}
-statistic %>%
-  ggplot(aes(mean_probdoar, narrative)) +
-  geom_errorbarh(aes(xmin=mean_probdoar-sd_probdoar, xmax=mean_probdoar+sd_probdoar), height = 0) +
-  geom_point(size = 2) +
-  scale_x_continuous(breaks=seq(0, 7, 1), limits=c(0, 7)) +
-  labs(x = "Probabilidade de doar", y = "Narrativa")
+  geom_errorbarh(aes(xmin = conf.low +1 , xmax = conf.high + 1), height = 0) +
+  scale_x_continuous(breaks=seq(1, 7, 1), limits=c(1, 7)) + 
+  labs(x = "Tendência a doação", y = "Narrativa")
 ggsave("../data/probabilidadedoar.png",width=8, height=4)
 ```
