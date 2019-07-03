@@ -9,6 +9,7 @@ output: html_notebook
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+theme_set(theme_bw())
 paleta = c("#404E4D",
            "#92DCE5",
            "#938BA1",
@@ -25,9 +26,9 @@ statistic = read_statistic()
 ```{r}
 statistic %>%
   ggplot(aes(mean_justodoar, narrative)) +
-  geom_point() +
+  geom_point(size = 2) +
   geom_errorbarh(aes(xmin=mean_justodoar-sd_justodoar, xmax=mean_justodoar+sd_justodoar)) +
-  scale_x_discrete(limits = c("0","1","2","3","4","5","6"))
+  expand_limits(x=0) +
   labs(x = "Quão justo é doar?", y = "Narrativa")
 ```
 
@@ -35,6 +36,7 @@ statistic %>%
 statistic %>%
   ggplot(aes(mean_probdoar, narrative)) +
   geom_errorbarh(aes(xmin=mean_probdoar-sd_probdoar, xmax=mean_probdoar+sd_probdoar)) +
-  geom_point() +
+  geom_point(size = 2) +
+  expand_limits(x=0) +
   labs(x = "Probabilidade de doar", y = "Narrativa")
 ```
