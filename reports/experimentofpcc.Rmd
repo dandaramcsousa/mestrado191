@@ -14,7 +14,7 @@ library(grid)
 
 knitr::opts_chunk$set(fig.width=25, fig.height=8) 
 
-theme_set(theme_linedraw())
+theme_set(theme_linedraw(base_family = "Roboto Condensed 200"))
 ```
 
 ```{r warning=FALSE}
@@ -105,5 +105,44 @@ estatisticas %>%
 ggsave("../data/icdadiferenca.png",width=8, height=4)
 ```
 
+```{r}
+experimento %>%
+  group_by(doacao) %>%
+  summarise(n= n()) %>%
+  ggplot(aes(y = n, x = doacao, label = n)) + geom_bar(stat = "identity") + geom_text()
+```
 
+```{r}
+extremapobreza <- experimento %>%
+  group_by(probabilidadedoar_extremapobreza) %>%
+  summarise(n = n()) %>%
+  ggplot(aes(probabilidadedoar_extremapobreza+1, n)) + geom_bar(stat = "identity") +
+  scale_x_discrete(limits=1:7) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank(), panel.grid.major.x = element_blank()) +
+  labs(title = " ") 
+extremapobreza
+```
+
+```{r}
+escola <- experimento %>%
+  group_by(probabilidadedoar_escola) %>%
+  summarise(n = n()) %>%
+  ggplot(aes(probabilidadedoar_escola +1, n)) + geom_bar(stat = "identity") +
+  scale_x_discrete(limits=1:7) +
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank(), panel.grid.major.x = element_blank()) +
+  labs(title = " ")
+escola
+```
+
+```{r}
+library(ggpubr)
+ggarrange(extremapobreza, escola, ncol = 1, nrow= 2)
+ggsave("../data/distribuicao.png",width=8, height=4)
+```
+
+```{r}
+library(extrafont)
+font_import()
+loadfonts()
+```
 
