@@ -14,7 +14,7 @@ library(grid)
 
 knitr::opts_chunk$set(fig.width=25, fig.height=8) 
 
-theme_set(theme_linedraw(base_family = "Roboto Condensed 200"))
+theme_set(theme_minimal())
 ```
 
 ```{r warning=FALSE}
@@ -89,9 +89,10 @@ estatisticas %>%
   ggplot(aes(statistic +1, narrativa)) +
   geom_point(size = 2) +
   geom_errorbarh(aes(xmin = conf.low +1 , xmax = conf.high + 1), height = 0) +
+  geom_hline(aes(yintercept = 1.5), linetype="dotted") +
   scale_x_continuous(breaks=seq(1, 7, 1), limits=c(1, 7)) + 
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(),
-        panel.grid.major.x = element_blank())
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), panel.grid.major.x = element_blank(), panel.background = element_rect(colour = "black", size=1)) +
+  labs(title = "Tendência a doar")
 ggsave("../data/tendenciaadoar.png",width=8, height=4)
 ```
 
@@ -101,7 +102,9 @@ estatisticas %>%
   ggplot(aes(statistic +1, narrativa)) +
   geom_point(size = 2) +
   geom_errorbarh(aes(xmin = conf.low +1 , xmax = conf.high + 1), height = 0) +
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), panel.grid.major.x = element_blank())
+  scale_x_continuous(limits=c(0, 2)) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), panel.grid.major.x = element_blank(), panel.background = element_rect(colour = "black", size=1)) +
+  labs(title = "Intervalo de confiança da diferença")
 ggsave("../data/icdadiferenca.png",width=8, height=4)
 ```
 
@@ -119,7 +122,7 @@ extremapobreza <- experimento %>%
   ggplot(aes(probabilidadedoar_extremapobreza+1, n)) + geom_bar(stat = "identity") +
   scale_x_discrete(limits=1:7) +
   theme(axis.title.y = element_blank(), axis.title.x = element_blank(), panel.grid.major.x = element_blank()) +
-  labs(title = " ") 
+  labs(title = "Crianças em extrema pobreza") 
 extremapobreza
 ```
 
@@ -130,7 +133,7 @@ escola <- experimento %>%
   ggplot(aes(probabilidadedoar_escola +1, n)) + geom_bar(stat = "identity") +
   scale_x_discrete(limits=1:7) +
   theme(axis.title.y = element_blank(), axis.title.x = element_blank(), panel.grid.major.x = element_blank()) +
-  labs(title = " ")
+  labs(title = "Crianças fora da escola")
 escola
 ```
 
